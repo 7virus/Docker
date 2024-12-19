@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   database:
     image: mariadb:10.5
@@ -8,10 +6,9 @@ services:
     volumes:
       - "/srv/pterodactyl/database:/var/lib/mysql"
     environment:
-      MYSQL_ROOT_PASSWORD: "secure_root_password"  # Root password for MariaDB
-      MYSQL_DATABASE: "panel"  # Database name
-      MYSQL_USER: "pterodactyl"  # Username for the panel database
-      MYSQL_PASSWORD: "secure_db_password"  # Password for the panel database
+      <<: *db-environment
+      MYSQL_DATABASE: "panel"
+      MYSQL_USER: "pterodactyl"
   cache:
     image: redis:alpine
     restart: always
@@ -30,7 +27,8 @@ services:
       - "/srv/pterodactyl/certs/:/etc/letsencrypt/"
       - "/srv/pterodactyl/logs/:/app/storage/logs"
     environment:
-      APP_KEY: "base64:YourAppKeyHere=="  # Generate an app key later
+      <<: [*panel-environment, *mail-environment]
+      DB_PASSWORD: *db-password
       APP_ENV: "production"
       APP_ENVIRONMENT_ONLY: "false"
       CACHE_DRIVER: "redis"
@@ -39,19 +37,8 @@ services:
       REDIS_HOST: "cache"
       DB_HOST: "database"
       DB_PORT: "3306"
-      DB_DATABASE: "panel"
-      DB_USERNAME: "pterodactyl"
-      DB_PASSWORD: "secure_db_password"  # Same as in the database service
-      MAIL_DRIVER: "smtp"
-      MAIL_HOST: "mail.example.com"
-      MAIL_PORT: "587"
-      MAIL_USERNAME: "your_email@example.com"
-      MAIL_PASSWORD: "your_email_password"
-      MAIL_ENCRYPTION: "tls"
-      MAIL_FROM: "your_email@example.com"
 networks:
   default:
     ipam:
       config:
         - subnet: 172.20.0.0/16
-        
